@@ -1,0 +1,42 @@
+{
+  "name": "ucc-campussphere",
+  "version": "0.1.0",
+  "private": true,
+  "description": "UCC CampusSphere - 3D Campus Navigation and Classroom Scheduling System",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "scripts": {
+    "build:shared": "npm run build -w @ucc/shared",
+    "dev": "npm run build:shared && concurrently -k -n api,web,admin -c blue,magenta,green \"npm run start:dev -w @ucc/api\" \"npm run dev -w @ucc/web\" \"npm run dev -w @ucc/admin\"",
+    "dev:api": "npm run build:shared && npm run start:dev -w @ucc/api",
+    "dev:web": "npm run dev -w @ucc/web",
+    "build": "npm run build:shared && npm run build -w @ucc/api && npm run build -w @ucc/web && npm run build -w @ucc/admin",
+    "typecheck": "npm run build:shared && npm run typecheck -w @ucc/api && npm run typecheck -w @ucc/web && npm run typecheck -w @ucc/admin",
+    "test": "npm run build:shared && npm run test -w @ucc/api",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "verify:phase2": "node scripts/verify-phase2.mjs",
+    "verify:phase4": "node scripts/verify-phase4.mjs",
+    "dev:admin": "npm run dev -w @ucc/admin",
+    "verify:public": "node scripts/verify-public.mjs"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "concurrently": "^9.0.0",
+    "eslint": "^9.0.0",
+    "eslint-config-prettier": "^10.0.0",
+    "globals": "^16.0.0",
+    "prettier": "^3.0.0",
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.0.0"
+  },
+  "overrides": {
+    "typescript": "~5.9.3"
+  }
+}

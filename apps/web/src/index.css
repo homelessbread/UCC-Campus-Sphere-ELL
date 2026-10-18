@@ -1,0 +1,149 @@
+@import 'tailwindcss';
+
+/* Flat orange and flat black. Dark is the default; the toggle sets data-theme on <html>. */
+:root,
+:root[data-theme='dark'] {
+  --bg: #141414;
+  --surface: #1c1c1c;
+  --raised: #232323;
+  --sunken: #101010;
+  --line: #2e2e2e;
+  --line-strong: #404040;
+  --ink: #f2f2f2;
+  --ink-soft: #c7c7c7;
+  --ink-mute: #9a9a9a;
+  --accent: #ff7a1a;
+  --accent-hover: #ff8f3d;
+  --on-accent: #111111;
+  --accent-text: #ff8f3d;
+  --sh-dark: rgba(0, 0, 0, 0.35);
+  --sh-light: transparent;
+  --danger: #ff8a80;
+  --danger-bg: #2a1716;
+  --warn: #ffc857;
+  --warn-bg: #2a2111;
+  --ok: #4cd080;
+  --st-free-bg: #1f9d55;
+  --st-free-ink: #06170c;
+  --st-occ-bg: #ff7a1a;
+  --st-occ-ink: #1a0c00;
+  --st-mnt-bg: #d9a400;
+  --st-mnt-ink: #1a1400;
+  --st-off-bg: #333333;
+  --st-off-ink: #d0d0d0;
+  color-scheme: dark;
+}
+:root[data-theme='light'] {
+  --bg: #eceef1;
+  --surface: #f8f9fa;
+  --raised: #ffffff;
+  --sunken: #e4e6ea;
+  --line: #d3d6db;
+  --line-strong: #b9bdc4;
+  --ink: #171717;
+  --ink-soft: #3d3d3d;
+  --ink-mute: #5c5c5c;
+  --accent: #e8610a;
+  --accent-hover: #cf5606;
+  --on-accent: #ffffff;
+  --accent-text: #b84a00;
+  --sh-dark: rgba(20, 24, 33, 0.1);
+  --sh-light: transparent;
+  --danger: #b3261e;
+  --danger-bg: #f6dedc;
+  --warn: #7a5200;
+  --warn-bg: #f5e8c8;
+  --ok: #17703a;
+  --st-free-bg: #2fb35f;
+  --st-free-ink: #04170a;
+  --st-occ-bg: #ff7a1a;
+  --st-occ-ink: #1a0c00;
+  --st-mnt-bg: #e0b020;
+  --st-mnt-ink: #1a1400;
+  --st-off-bg: #c3c6cc;
+  --st-off-ink: #2b2b2b;
+  color-scheme: light;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-raised: var(--raised);
+  --color-sunken: var(--sunken);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-mute: var(--ink-mute);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-on-accent: var(--on-accent);
+  --color-accent-text: var(--accent-text);
+  --color-danger: var(--danger);
+  --color-danger-bg: var(--danger-bg);
+  --color-warn: var(--warn);
+  --color-warn-bg: var(--warn-bg);
+  --color-ok: var(--ok);
+  --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
+  --font-heading: 'Bricolage Grotesque', 'IBM Plex Sans', system-ui, sans-serif;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+}
+
+/* Surfaces: a slightly lighter panel, a 1px border and a very small shadow. Radii stay small. */
+@utility neo {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 1px 2px var(--sh-dark);
+}
+@utility neo-sm {
+  background: var(--raised);
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+}
+@utility neo-in {
+  background: var(--sunken);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+
+/* Room status. Colour is always paired with words. Green = free now, orange = a class is on now. */
+.st {
+  border: 1px solid transparent;
+}
+.st-free {
+  background: var(--st-free-bg);
+  color: var(--st-free-ink);
+}
+.st-occupied {
+  background: var(--st-occ-bg);
+  color: var(--st-occ-ink);
+}
+.st-maintenance {
+  background: var(--st-mnt-bg);
+  color: var(--st-mnt-ink);
+}
+.st-inactive {
+  background: var(--st-off-bg);
+  color: var(--st-off-ink);
+}
+.st-selected {
+  outline: 2px solid var(--ink);
+  outline-offset: 1px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}

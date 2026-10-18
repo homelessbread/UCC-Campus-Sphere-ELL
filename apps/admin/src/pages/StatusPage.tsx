@@ -1,0 +1,69 @@
+import { useQuery } from '@tanstack/react-query';
+import { fetchHealth } from '../lib/api';
+
+export default function StatusPage() {
+  const health = useQuery({ queryKey: ['health'], queryFn: fetchHealth, retry: false });
+
+  return (
+    <main className="mx-auto flex min-h-screen max-w-xl flex-col gap-6 px-4 py-10">
+      <header>
+        <p className="text-sm font-semibold tracking-widest text-ucc-orange uppercase">
+          Explore. Locate. Learn.
+        </p>
+        <h1 className="mt-1 text-3xl font-bold text-ucc-navy">UCC CampusSphere</h1>
+        <p className="mt-1 text-slate-600">3D Campus Navigation and Classroom Scheduling System</p>
+      </header>
+
+      <section aria-live="polite" className="rounded-lg border border-slate-200 bg-white p-5">
+        <h2 className="text-lg font-semibold text-slate-900">Backend connection</h2>
+
+        {health.isPending && <p className="mt-3 text-slate-600">Checking the API...</p>}
+
+        {health.isError && (
+          <div className="mt-3 rounded-md bg-red-50 p-3 text-red-800">
+            <p className="font-medium">The API is not reachable.</p>
+            <p className="mt-1 text-sm">
+              {health.error.message} Start it with <code>npm run dev:api</code> and try again.
+            </p>
+          </div>
+        )}
+
+        {health.isSuccess && (
+          <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
+            <dt className="text-slate-500">Status</dt>
+            <dd className="font-medium text-green-700">{health.data.status}</dd>
+            <dt className="text-slate-500">Service</dt>
+            <dd>{health.data.service}</dd>
+            <dt className="text-slate-500">Version</dt>
+            <dd>{health.data.version}</dd>
+            <dt className="text-slate-500">Server time (UTC)</dt>
+            <dd>{health.data.time}</dd>
+            <dt className="text-slate-500">School time zone</dt>
+            <dd>{health.data.schoolTimeZone}</dd>
+            <dt className="text-slate-500">Supabase variables</dt>
+            <dd>{health.data.supabase.configured ? 'set on the server' : 'not set yet'}</dd>
+            <dt className="text-slate-500">Supabase connection</dt>
+            <dd>
+              {
+                {
+                  ok: 'connected (a real query succeeded)',
+                  failed: 'failed (check the server URL and secret key)',
+                  not_tested: 'not tested',
+                }[health.data.supabase.connection]
+              }
+            </dd>
+          </dl>
+        )}
+
+        <button
+          type="button"
+          onClick={() => health.refetch()}
+          disabled={health.isFetching}
+          className="mt-4 rounded-md bg-ucc-navy px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
+        >
+          {health.isFetching ? 'Checking...' : 'Check again'}
+        </button>
+      </section>
+    </main>
+  );
+}

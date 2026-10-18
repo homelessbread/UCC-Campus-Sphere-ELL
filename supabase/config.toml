@@ -1,0 +1,3 @@
+# Minimal Supabase CLI config. Run `npx supabase init` to regenerate the full default file
+# if you want to use the Supabase CLI (optional, not needed in Phase 1).
+project_id = "ucc-campussphere"
