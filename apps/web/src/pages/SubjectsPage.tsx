@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Empty, ErrorBox, inputCls, Loading } from '../components/ui';
 import { Title } from '../components/Title';
 import { list } from '../lib/api';
@@ -28,7 +29,8 @@ export default function SubjectsPage() {
       }));
     },
   });
-  const [s, setS] = useState('');
+  const [params] = useSearchParams();
+  const [s, setS] = useState(params.get('q') ?? '');
   const rows = (q.data ?? []).filter((x) =>
     `${x.code} ${x.title}`.toLowerCase().includes(s.toLowerCase()),
   );

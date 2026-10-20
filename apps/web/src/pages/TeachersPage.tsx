@@ -1,13 +1,15 @@
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
+import { Icon } from '../components/Icon';
 import { Empty, ErrorBox, inputCls, Loading } from '../components/ui';
 import { Title } from '../components/Title';
 import { list } from '../lib/api';
 
 export default function TeachersPage() {
   const q = useQuery({ queryKey: ['teachers'], queryFn: () => list('/teachers') });
-  const [s, setS] = useState('');
+  const [params] = useSearchParams();
+  const [s, setS] = useState(params.get('q') ?? '');
   const rows = (q.data ?? []).filter(
     (t) => t.is_active && t.full_name.toLowerCase().includes(s.toLowerCase()),
   );
@@ -39,6 +41,7 @@ export default function TeachersPage() {
                 className="text-sm font-medium text-accent-text hover:underline"
                 to={`/timetable?teacher=${t.id}`}
               >
+                <Icon name="calendar" className="mr-1 align-[-0.15em]" />
                 Timetable
               </Link>
             </li>

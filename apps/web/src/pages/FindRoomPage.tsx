@@ -1,5 +1,7 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { Icon } from '../components/Icon';
 import { btn, ErrorBox, Field, inputCls, StatusPill } from '../components/ui';
 import { Title } from '../components/Title';
 import { RoomChip } from '../components/RoomChip';
@@ -13,7 +15,11 @@ const PRESETS = [
 ] as const;
 
 export default function FindRoomPage() {
-  const [preset, setPreset] = useState<string>('now');
+  const [params] = useSearchParams();
+  const fromLink = params.get('preset');
+  const [preset, setPreset] = useState<string>(
+    PRESETS.some(([v]) => v === fromLink) ? (fromLink as string) : 'now',
+  );
   const [start, setStart] = useState('');
   const [minutes, setMinutes] = useState('60');
   const [cap, setCap] = useState('');
@@ -34,6 +40,14 @@ export default function FindRoomPage() {
       }),
   });
   const r = search.data;
+  // Arriving from a "Free now" style shortcut runs the search straight away.
+  const auto = useRef(false);
+  useEffect(() => {
+    if (fromLink && !auto.current && PRESETS.some(([v]) => v === fromLink && v !== 'custom')) {
+      auto.current = true;
+      search.mutate();
+    }
+  }, []);
 
   return (
     <>
@@ -152,6 +166,7 @@ export default function FindRoomPage() {
           </p>
         )}
         <button className={btn.primary} disabled={search.isPending}>
+          <Icon name="find" className="mr-2 align-[-0.15em]" />
           {search.isPending ? 'Searching…' : 'Find rooms'}
         </button>
       </form>
