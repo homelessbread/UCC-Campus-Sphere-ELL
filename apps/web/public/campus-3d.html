@@ -612,13 +612,28 @@ function bay(g,cx,y,z0,w,h){
 }
 function column(g,x0,x1,y0,y1,z0,z1){box(g,x0,x1,y0,y1,z0,z1,MAT.navy);}
 function stairs(g,w,y0,f){
-  var r=stairRect(w),wd=r.x1-r.x0,zf=r.z1,zb=r.z0,d=(zf-zb)/8,rr=2/7,h=wd/2;
-  var ax0=r.x0+0.1,ax1=r.x0+h-0.05,bx0=r.x0+h+0.05,bx1=r.x1-0.1,i;
-  for(i=0;i<7;i++){
-    box(g,ax0,ax1,y0,y0+(i+1)*rr,zf-(i+1)*d,zf-i*d,MAT.step);
-    box(g,bx0,bx1,y0,y0+2+(i+1)*rr,zf-(7-i)*d,zf-(6-i)*d,MAT.step);
-  }
-  box(g,r.x0+0.1,r.x1-0.1,y0,y0+2,zb,zb+d,MAT.step);
+  /* Two-flight stair with intermediate landing facing front window.
+     Flight A: rear → landing (rises from z=zb upward, going toward zf).
+     Landing: mid-height platform spanning full width.
+     Flight B: landing → top (reverses direction, going back toward zb).
+  */
+  var r=stairRect(w),wd=r.x1-r.x0,zf=r.z1,zb=r.z0,depth=zf-zb;
+  var ns=7,rr=H/ns/2; /* ns steps per flight, rr = rise per step */
+  var mid=y0+H/2; /* landing height */
+  var zLandF=zb+depth*0.55,zLandB=zb+depth*0.45; /* landing occupies middle 10% of depth */
+  var xm=r.x0+wd/2; /* split x between two flights */
+  var ax0=r.x0+0.08,ax1=xm-0.06,bx0=xm+0.06,bx1=r.x1-0.08;
+  var i,stepD;
+  /* Flight A: ax0..ax1, goes from zb forward to landing */
+  stepD=(zLandB-zb)/ns;
+  for(i=0;i<ns;i++){box(g,ax0,ax1,y0,y0+(i+1)*rr,zb+i*stepD,zb+(i+1)*stepD,MAT.step);}
+  /* Flight B (reversed direction, same x slice): bx0..bx1, from zLandF back toward zb */
+  stepD=(zLandF-zb)/ns;
+  for(i=0;i<ns;i++){box(g,bx0,bx1,mid,mid+(i+1)*rr,zLandF-i*stepD-stepD,zLandF-i*stepD,MAT.step);}
+  /* Landing platform */
+  box(g,r.x0+0.08,r.x1-0.08,y0,mid,zLandB,zLandF,MAT.step);
+  /* Slab under stairs */
+  box(g,r.x0,r.x1,y0-0.05,y0+0.05,zb,zf,MAT.slab);
   COL[f].push([r.x0,r.x1,zb,zf]);
 }
 function toilet(g,w,cx,cy,y0,north){
@@ -686,7 +701,14 @@ function wingFloor(w,f){
   [X(0),X(711),X(1423),X(2135)].forEach(function(x){
     var xx=Math.max(xmin+0.25,Math.min(xmax-0.25,x));column(g,xx-0.25,xx+0.25,y0,y1,-D/2-0.3,-D/2);
   });
-  if(f===1)box(g,entr-0.9,entr+0.9,y0,y0+DH,D/2-T,D/2-T+0.02,MAT.glass);
+  if(f===1){
+    box(g,entr-0.9,entr+0.9,y0,y0+DH,D/2-T,D/2-T+0.02,MAT.glass);
+    /* 4-step entrance staircase leading up to main entrance */
+    var nSteps=4,stepH=0.18,stepT=0.32;
+    for(var si=0;si<nSteps;si++){
+      box(g,entr-1.1,entr+1.1,y0-SL,y0+(si+1)*stepH,D/2+(si*stepT),D/2+((si+1)*stepT),MAT.step);
+    }
+  }
 
   /* windows: sizes and spacing follow the front photo (tall 1.4 x 2.0 openings, a bay on the inner front room) */
   var rf=ROOMS.filter(function(r){return r.wing===w&&r.floor===f;});
@@ -706,7 +728,7 @@ function wingFloor(w,f){
     if(onInner&&f!==3)[0.28,0.72].forEach(function(q){pane(g,xi,y0+0.9,zc2(q),1.4,2,false);});
   });
   pane(g,xo,y0+0.9,(ZC1+ZC2)/2,2.2,2,false);
-  var sw=w==='L'?X(1470):X(663);pane(g,sw,y0+1.0,D/2-T/2,1.0,1.8,true);
+  /* entrance side panel removed */
   (w==='L'?[Z(1070),Z(1346)]:[Z(1203),Z(1560)]).forEach(function(z){pane(g,xi,y0+1.8,z,0.9,0.8,false);});
 
   /* corridor-facing partitions */
@@ -718,7 +740,7 @@ function wingFloor(w,f){
     wallZ(g,Z(930),X(0),X(1308),y0,y1,MAT.wallI,col,frontG);
     wallX(g,X(711),Z(930),D/2,y0,y1,MAT.wallI,col);
     wallX(g,X(1310),Z(930),D/2,y0,y1,MAT.wallI,col);
-    wallX(g,X(1628),Z(930),Z(1486),y0,y1,MAT.wallI,col);
+    /* wall beside stairs removed */
     wallX(g,X(1888),Z(1485),D/2,y0,y1,MAT.wallI,col,[[Z(1610)-0.7,Z(1610)+0.7]]);
     pib(g,w,1888,2135,1485,1736,y0,y0+0.01,MAT.steel);
     floatLabel(g,'Elevator','',(X(1888)+X(2135))/2,y0+2.35,(Z(1485)+D/2)/2,1.8);
@@ -726,7 +748,7 @@ function wingFloor(w,f){
     wallZ(g,Z(930),X(826),X(2135),y0,y1,MAT.wallI,col,frontG);
     wallX(g,X(1423),Z(930),D/2,y0,y1,MAT.wallI,col);
     wallX(g,X(823),Z(930),D/2,y0,y1,MAT.wallI,col);
-    wallX(g,X(507),Z(930),Z(1486),y0,y1,MAT.wallI,col);
+    /* wall beside stairs removed */
   }
   restrooms(g,w,y0,y1,col);
   stairs(g,w,y0,f);
@@ -801,7 +823,7 @@ function buildLink(){
   flat(LINK,x0,x1,za+0.1,zb-0.1,y2+0.012,MAT.corr);
   box(LINK,x0,x1,y2,3*H-SL,za-0.06,za+0.06,MAT.linkGlass,COL[3]);
   box(LINK,x0,x1,y2,3*H-SL,zb-0.06,zb+0.06,MAT.linkGlass,COL[3]);
-  [za+0.3,zb-0.3].forEach(function(z){box(LINK,-0.25,0.25,0,y2-SL,z-0.25,z+0.25,MAT.navy);});
+  /* blue poles removed per visual correction */
   box(LINKROOF,x0,x1,3*H-SL,3*H,za,zb,MAT.slab);
 }
 function buildGround(){
@@ -1275,7 +1297,7 @@ function start(){
   }else{
     ['bReset','bFront','bBack','bTop','bXray','bLab','bRoute','bWalk','bEx','bFull','rEx','segB','segF'].forEach(function(i){var e=$(i);if(e&&e.tagName==='BUTTON')e.disabled=true;});
   }
-  window.__ucc={st:st,ROOMS:ROOMS,select:select,applyView:applyView,blocked:blocked,walk:walk,stairRect:stairRect,stairSpot:stairSpot,enterWalk:enterWalk,startClimb:startClimb,stepWalk:stepWalk,ZC1:ZC1,ZC2:ZC2,routeCount:function(){return routeObjs.length;},camera:function(){return camera;}};
+  window.__ucc={st:st,ROOMS:ROOMS,select:select,applyView:applyView,blocked:blocked,walk:walk,stairRect:stairRect,stairSpot:stairSpot,enterWalk:enterWalk,startClimb:startClimb,stepWalk:stepWalk,ZC1:ZC1,ZC2:ZC2,routeCount:function(){return routeObjs.length;},camera:function(){return camera;},controls:function(){return controls;}};
 }
 var fp=(document.fonts&&document.fonts.ready)?Promise.race([document.fonts.ready,new Promise(function(r){setTimeout(r,1500);})]):Promise.resolve();
 fp.then(start,start);

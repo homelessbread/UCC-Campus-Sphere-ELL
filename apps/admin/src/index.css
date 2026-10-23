@@ -8,11 +8,76 @@
   --font-heading: 'Bricolage Grotesque', 'IBM Plex Sans', system-ui, sans-serif;
 }
 
-body {
-  background: #f3f5f8;
-  color: #1e293b;
-  font-family: var(--font-sans);
+/* ── Theme tokens ── */
+:root {
+  --bg: #0f172a;
+  --bg2: #1e293b;
+  --bg3: #263245;
+  --surface: #1e293b;
+  --border: #334155;
+  --text: #e2e8f0;
+  --text2: #94a3b8;
+  --ring: var(--color-ucc-orange);
 }
+[data-theme="light"] {
+  --bg: #f3f5f8;
+  --bg2: #ffffff;
+  --bg3: #e8edf3;
+  --surface: #ffffff;
+  --border: #d1d5db;
+  --text: #1e293b;
+  --text2: #64748b;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  transition: background 0.15s, color 0.15s;
+}
+
+/* Cards / panels */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  padding: 1rem 1.25rem;
+}
+
+/* Table theming */
+table { border-collapse: collapse; width: 100%; }
+thead th {
+  background: var(--bg3);
+  color: var(--text2);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+}
+tbody td { padding: 0.6rem 0.75rem; border-top: 1px solid var(--border); color: var(--text); }
+tbody tr:hover td { background: var(--bg3); }
+
+/* Form inputs */
+input, select, textarea {
+  background: var(--bg2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 0.375rem;
+  padding: 0.4rem 0.625rem;
+  font-size: 0.875rem;
+}
+input::placeholder, textarea::placeholder { color: var(--text2); }
+input:focus, select:focus, textarea:focus {
+  outline: 2px solid var(--color-ucc-orange);
+  outline-offset: 1px;
+}
+
+/* Dropdown / select */
+select { cursor: pointer; }
+
+/* Modal backdrop */
+.modal-bg { background: rgba(0,0,0,0.55); }
 @media (prefers-reduced-motion: reduce) {
   * {
     animation: none !important;
