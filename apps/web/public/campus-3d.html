@@ -165,6 +165,7 @@ body.embed .grp,body.embed .tool,body.embed .ex{box-shadow:none}
       <button type="button" class="tool" id="bLab" aria-pressed="false" title="Facade labels" aria-label="Facade labels"><svg class="ic"><use href="#i-tag"/></svg><span class="tl">Facade labels</span></button>
       <button type="button" class="tool" id="bXray" aria-pressed="false" title="See-through walls" aria-label="See-through walls"><svg class="ic"><use href="#i-eye"/></svg><span class="tl">See-through walls</span></button>
       <button type="button" class="tool" id="bRoute" aria-pressed="true" title="Show the way to the selected room" aria-label="Show the way to the selected room"><svg class="ic"><use href="#i-route"/></svg><span class="tl">Route to room</span></button>
+      <button type="button" class="tool" id="bLift" aria-pressed="false" title="Route via the elevator instead of the stairs (left building)" aria-label="Route via the elevator"><svg class="ic"><use href="#i-route"/></svg><span class="tl">Use elevator</span></button>
       <button type="button" class="tool" id="bWalk" aria-pressed="false" title="Walk inside" aria-label="Walk inside"><svg class="ic"><use href="#i-walk"/></svg><span class="tl">Walk inside</span></button>
       <div class="exw">
         <button type="button" class="tool" id="bEx" aria-expanded="false" title="Explode floors" aria-label="Explode floors"><svg class="ic"><use href="#i-layers"/></svg><span class="tl">Explode</span></button>
@@ -914,7 +915,7 @@ function buildAll(){
 
 /* ---------- Scene, view state, interaction ---------- */
 var $=function(id){return document.getElementById(id);};
-var stage=$('stage'),st={bld:'both',flr:'all',sel:null,xray:false,lab:false,walk:false,ex:0,route:true};
+var stage=$('stage'),st={bld:'both',flr:'all',sel:null,xray:false,lab:false,walk:false,ex:0,route:true,lift:false};
 var scene,camera,renderer,controls,outline=null,tw=null;
 var DEF={p:new THREE.Vector3(34,30,78),t:new THREE.Vector3(0,7,0)};
 var walk={x:0,z:0,yaw:0,pitch:0,floor:1,keys:{},pad:{}};
@@ -1190,7 +1191,7 @@ function dijkstra(N,srcs,goal){
     var u=q.splice(bi,1)[0];if(done[u.id])continue;done[u.id]=true;
     if(u.id===goal)break;
     u.adj.forEach(function(e){
-      var nd=dist[u.id]+e.cost+(st.walk&&(e.kind==='steps'||e.kind==='gap')?120:0); /* a walker stays inside: use the bridge */
+      var nd=dist[u.id]+e.cost+(st.walk&&(e.kind==='steps'||e.kind==='gap')?120:0)+(e.kind==='lift'&&!st.lift?100000:0); /* stairs by default; the elevator only when chosen */ /* a walker stays inside: use the bridge */
       if(dist[e.to.id]===undefined||nd<dist[e.to.id]){dist[e.to.id]=nd;prev[e.to.id]={from:u,edge:e,link:prev[u.id]};q.push(e.to);}
     });
   }
@@ -1451,6 +1452,7 @@ function bind(){
   $('bWalk').addEventListener('click',function(){if(st.walk)leaveWalk();else enterWalk();});
   $('rEx').addEventListener('input',function(){st.ex=+this.value;applyView();});
   $('bRoute').addEventListener('click',function(){st.route=!st.route;showRoute(st.route?st.sel:null);applyView();});
+  $('bLift').addEventListener('click',function(){st.lift=!st.lift;this.setAttribute('aria-pressed',String(st.lift));showRoute(st.route?st.sel:null);});
   $('bEx').addEventListener('click',function(){var h=!$('exPop').hidden;$('exPop').hidden=h;this.setAttribute('aria-expanded',String(!h));});
   $('bFull').addEventListener('click',toggleFull);
   $('bUp').addEventListener('click',function(){startClimb(1);});
