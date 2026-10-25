@@ -443,6 +443,8 @@ function slabRect(g,xa,xb,yTop,holes,mat){
   var me=new THREE.Mesh(geo,mat);me.position.y=yTop-SL;g.add(me);return me;
 }
 function stairRect(w){return w==='L'?rect('L',1313,1628,933,1486):rect('R',507,820,933,1486);}
+/* Slim stair footprint inside the stairwell: the opening in the floors above matches it. */
+function stairBox(w){var r=stairRect(w),c=(r.x0+r.x1)/2;return{x0:c-1.3,x1:c+1.3,z0:r.z0,z1:r.z1};}
 /* Outer-face outline of one long side as a left-to-right list of [x,z] points. */
 function profPts(w,side){
   var s=side==='front'?1:-1,zf=s*D/2,zr=s*(D/2-DL),pts=[];
@@ -669,24 +671,31 @@ function bay(g,cx,y,z0,w,h,dir){
 }
 function column(g,x0,x1,y0,y1,z0,z1){box(g,x0,x1,y0,y1,z0,z1,MAT.navy);}
 function stairs(g,w,y0,f){
-  /* Straight stair with an intermediate landing: seven risers, a mid-height landing, seven more risers.
-     It starts at the corridor end of the stairwell and climbs toward the front window; the top step meets the next floor. */
-  var r=stairRect(w),zb=r.z0,zf=r.z1,ns=7,rr=H/2/ns,LL=1.7,d=(zf-zb-LL)/(2*ns),mid=y0+H/2,i;
-  var x0=r.x0+0.1,x1=r.x1-0.1,zl0=zb+ns*d,zl1=zl0+LL;
-  for(i=0;i<ns;i++){
-    box(g,x0,x1,y0,y0+(i+1)*rr,zb+i*d,zb+(i+1)*d,MAT.step);
-    box(g,x0,x1,y0,mid+(i+1)*rr,zl1+i*d,zl1+(i+1)*d,MAT.step);
+  /* Slim concrete stair: ten risers, a landing at mid-height, ten more risers, climbing from the corridor end toward the front window.
+     Each flight is a thin sloped slab with thin treads and risers, so the space beneath stays open and nothing reaches below its own floor. */
+  var r=stairBox(w),zb=r.z0,zf=r.z1,ns=10,rr=H/2/ns,LL=1.5,d=(zf-zb-LL)/(2*ns),mid=y0+H/2,i;
+  var x0=r.x0,x1=r.x1,xw=x1-x0,zl0=zb+ns*d,zl1=zl0+LL,tt=0.07,wt=0.16;
+  function flight(za,ya){
+    var th=Math.atan2(rr,d),len=Math.sqrt(ns*d*ns*d+(ns*rr)*(ns*rr)),zc=za+ns*d/2,yc=ya+ns*rr/2-0.06-wt/2/Math.cos(th);
+    var m=new THREE.Mesh(new THREE.BoxGeometry(xw,wt,len),MAT.step);m.position.set((x0+x1)/2,yc,zc);m.rotation.x=-th;g.add(m);
+    for(i=0;i<ns;i++){
+      var top=ya+(i+1)*rr,z=za+i*d;
+      box(g,x0,x1,top-tt,top,z,z+d,MAT.step);
+      box(g,x0,x1,top-rr,top,z,z+0.04,MAT.step);
+    }
   }
-  box(g,x0,x1,y0,mid,zl0,zl1,MAT.landing);
+  flight(zb,y0);flight(zl1,mid);
+  box(g,x0,x1,mid-0.2,mid,zl0,zl1,MAT.landing);
   function rail(xa,za,ya,zc,yb){
-    var dz=zc-za,dy=yb-ya,len=Math.sqrt(dz*dz+dy*dy),m=new THREE.Mesh(new THREE.BoxGeometry(0.05,0.05,len),MAT.steel);
+    var dz=zc-za,dy=yb-ya,len=Math.sqrt(dz*dz+dy*dy),m=new THREE.Mesh(new THREE.BoxGeometry(0.04,0.04,len),MAT.steel);
     m.position.set(xa,(ya+yb)/2,(za+zc)/2);m.rotation.x=-Math.atan2(dy,dz);g.add(m);
   }
-  [r.x0+0.06,r.x1-0.06].forEach(function(xx){
+  [x0+0.04,x1-0.04].forEach(function(xx){
     rail(xx,zb,y0+0.95,zl0,mid+0.95);rail(xx,zl0,mid+0.95,zl1,mid+0.95);rail(xx,zl1,mid+0.95,zf,y0+H+0.95);
-    box(g,xx-0.03,xx+0.03,y0,y0+0.95,zb-0.03,zb+0.03,MAT.steel);box(g,xx-0.03,xx+0.03,mid,mid+0.95,zl0-0.03,zl0+0.03,MAT.steel);box(g,xx-0.03,xx+0.03,mid,mid+0.95,zl1-0.03,zl1+0.03,MAT.steel);
+    [[zb,y0],[zl0,mid],[zl1,mid],[zf-0.03,y0+H]].forEach(function(q){box(g,xx-0.02,xx+0.02,q[1],q[1]+0.95,q[0]-0.02,q[0]+0.02,MAT.steel);});
   });
-  COL[f].push([r.x0,r.x1,zb,zf]);
+  /* the low first flight blocks walking; above it, and on upper floors, only the opening needs guarding */
+  if(f===1)COL[f].push([x0,x1,zb,zb+ns*d]);else COL[f].push([x0,x1,zb,zf]);
 }
 /* Four entrance steps outside a door opening: the nearest step is flush with the floor, the farthest is the lowest. */
 function entranceSteps(g,faceX,dir,za,zb,y0){
@@ -734,7 +743,7 @@ function wingFloor(w,f){
   var xi=w==='L'?xmax-T/2:xmin+T/2,xo=w==='L'?xmin+T/2:xmax-T/2;
   function X(p){return wx(w,p);}function Z(p){return wz(p);}
   var fp=footprint(w);
-  slabPoly(g,fp,y0,f>=2?[stairRect(w)]:[],MAT.slab,SL);
+  slabPoly(g,fp,y0,f>=2?[stairBox(w)]:[],MAT.slab,SL);
   flat(g,xmin,xmax,ZC1,ZC2,y0+0.012,MAT.corr);
   var sr=stairRect(w);
   flat(g,sr.x0,sr.x1,Z(1486),D/2-DL,y0+0.012,MAT.landing);
@@ -848,7 +857,7 @@ function rw(r){return r.x1-r.x0;}
 function buildHall(){
   var g=HALL,y0=4*H,xa=wx('L',0),xb=wx('R',PW),y1=y0+HH;
   root.add(g);
-  slabRect(g,xa,xb,y0,[stairRect('L'),stairRect('R')],MAT.slab);
+  slabRect(g,xa,xb,y0,[stairBox('L'),stairBox('R')],MAT.slab);
   var col=COL[5];
   wallZ(g,D/2-T/2,xa,xb,y0,y1,MAT.orange,col);wallZ(g,-D/2+T/2,xa,xb,y0,y1,MAT.orange,col);
   wallX(g,xa+T/2,-D/2,D/2,y0,y1,MAT.orange,col);wallX(g,xb-T/2,-D/2,D/2,y0,y1,MAT.orange,col);
