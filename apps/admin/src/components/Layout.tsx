@@ -76,7 +76,7 @@ export default function Layout() {
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
-    try { localStorage.setItem(THEME_KEY, theme); } catch {}
+    try { localStorage.setItem(THEME_KEY, theme); } catch { /* choice just is not remembered */ }
   }, [theme]);
 
   function toggleTheme() {

@@ -3,12 +3,12 @@
 /* Flat orange and flat black. Dark is the default; the toggle sets data-theme on <html>. */
 :root,
 :root[data-theme='dark'] {
-  --bg: #141414;
-  --surface: #1c1c1c;
-  --raised: #232323;
+  --bg: #0d0d0d;
+  --surface: #151515;
+  --raised: #1d1d1d;
   --sunken: #101010;
-  --line: #2e2e2e;
-  --line-strong: #404040;
+  --line: #262626;
+  --line-strong: #353535;
   --ink: #f2f2f2;
   --ink-soft: #c7c7c7;
   --ink-mute: #9a9a9a;
@@ -16,7 +16,7 @@
   --accent-hover: #ff8f3d;
   --on-accent: #111111;
   --accent-text: #ff8f3d;
-  --sh-dark: rgba(0, 0, 0, 0.35);
+  --sh-dark: rgba(0, 0, 0, 0.5);
   --sh-light: transparent;
   --danger: #ff8a80;
   --danger-bg: #2a1716;
@@ -34,20 +34,20 @@
   color-scheme: dark;
 }
 :root[data-theme='light'] {
-  --bg: #eceef1;
-  --surface: #f8f9fa;
+  --bg: #f1f1f3;
+  --surface: #ffffff;
   --raised: #ffffff;
-  --sunken: #e4e6ea;
-  --line: #d3d6db;
-  --line-strong: #b9bdc4;
-  --ink: #171717;
-  --ink-soft: #3d3d3d;
-  --ink-mute: #5c5c5c;
-  --accent: #e8610a;
-  --accent-hover: #cf5606;
+  --sunken: #ececef;
+  --line: #e3e3e7;
+  --line-strong: #cfcfd5;
+  --ink: #17181c;
+  --ink-soft: #3a3c43;
+  --ink-mute: #5b5e67;
+  --accent: #1c1d22;
+  --accent-hover: #34363d;
   --on-accent: #ffffff;
-  --accent-text: #b84a00;
-  --sh-dark: rgba(20, 24, 33, 0.1);
+  --accent-text: #c2500a;
+  --sh-dark: rgba(20, 24, 33, 0.12);
   --sh-light: transparent;
   --danger: #b3261e;
   --danger-bg: #f6dedc;
@@ -84,32 +84,40 @@
   --color-warn: var(--warn);
   --color-warn-bg: var(--warn-bg);
   --color-ok: var(--ok);
-  --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
-  --font-heading: 'Bricolage Grotesque', 'IBM Plex Sans', system-ui, sans-serif;
+  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-heading: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
 
 body {
   background: var(--bg);
   color: var(--ink);
   font-family: var(--font-sans);
+  font-weight: 400;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
 }
+/* One type scale: bold headings, semibold section titles, regular body text. */
+h1 { font-size: 1.5rem; line-height: 2rem; font-weight: 700; letter-spacing: -0.02em; }
+h2 { font-size: 1.125rem; line-height: 1.5rem; font-weight: 600; letter-spacing: -0.01em; }
+h3 { font-size: 0.9375rem; line-height: 1.375rem; font-weight: 600; }
+th { font-weight: 600; }
 
 /* Surfaces: a slightly lighter panel, a 1px border and a very small shadow. Radii stay small. */
 @utility neo {
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 8px;
-  box-shadow: 0 1px 2px var(--sh-dark);
+  border-radius: 12px;
+  box-shadow: 0 1px 2px var(--sh-dark), 0 10px 24px -16px var(--sh-dark);
 }
 @utility neo-sm {
   background: var(--raised);
   border: 1px solid var(--line-strong);
-  border-radius: 6px;
+  border-radius: 10px;
 }
 @utility neo-in {
   background: var(--sunken);
   border: 1px solid var(--line);
-  border-radius: 6px;
+  border-radius: 10px;
 }
 
 /* Room status. Colour is always paired with words. Green = free now, orange = a class is on now. */
