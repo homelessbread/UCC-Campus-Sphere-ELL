@@ -4,7 +4,7 @@
 
 Students, teachers, and administrators can explore the campus in 3D, view classroom schedules, and find rooms that are available for a requested period. Availability is calculated from database records and is schedule-based: an unscheduled room does not guarantee that nobody is inside it.
 
-**Live Website:** [Browse UCC CampusSphere](https://ucc-campus-sphere-ell-s924.vercel.app)
+**Live Website:** [UCC CampusSphere](https://ucc-campus-sphere-ell-s924.vercel.app)
 
 ## Website Preview
 
@@ -14,7 +14,7 @@ Students, teachers, and administrators can explore the campus in 3D, view classr
 
 ### 3D UCC Congress Campus Model
 
-![3D UCC Congress Campus Model](screenshots/3d campus.jpg)
+![3D UCC Congress Campus Model](screenshots/3d-campus.jpg)
 
 ## Tech Stack
 
