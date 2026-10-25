@@ -1050,7 +1050,7 @@ function renderFloat(){
 }
 
 /* ---------- Route highlight: entrance, corridor, stairs, door, room ---------- */
-var routeObjs=[],routeTex=[],routeRing=null,CHEVC=null,RC=0x2cc4f0;
+var routeObjs=[],routeTex=[],routeRing=null,CHEVC=null,RC=0x12e8ff;
 function chevTex(){
   if(CHEVC)return CHEVC;
   var c=document.createElement('canvas');c.width=128;c.height=64;var x=c.getContext('2d');
@@ -1060,6 +1060,7 @@ function chevTex(){
 }
 function grpOf(w,f){return f>=5?HALL:FG[w][f];}
 function clearRoute(){
+  fadeRestore();FCAND=null;FSAMP=[];
   routeObjs.forEach(function(o){
     if(o.parent)o.parent.remove(o);
     if(o.geometry)o.geometry.dispose();
@@ -1073,7 +1074,9 @@ function strip(grp,a,b){
   var X=new THREE.Vector3(dx,dy,dz).normalize(),Z=new THREE.Vector3().crossVectors(X,new THREE.Vector3(0,1,0));
   if(Z.lengthSq()<1e-6)return;Z.normalize();var Y=new THREE.Vector3().crossVectors(Z,X);
   var t=chevTex().clone();t.needsUpdate=true;t.wrapS=THREE.RepeatWrapping;t.repeat.set(len/1.1,1);
-  var geo=new THREE.PlaneGeometry(len,0.8);geo.rotateX(-Math.PI/2);
+  var under=new THREE.Mesh(new THREE.PlaneGeometry(len,1.15).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:0x06141a,transparent:true,opacity:0.6,depthTest:false,depthWrite:false}));
+  under.matrixAutoUpdate=false;under.matrix.makeBasis(X,Y,Z).setPosition((a[0]+b[0])/2,(a[1]+b[1])/2,(a[2]+b[2])/2);under.renderOrder=996;grp.add(under);routeObjs.push(under);
+  var geo=new THREE.PlaneGeometry(len,0.9);geo.rotateX(-Math.PI/2);
   var m=new THREE.Mesh(geo,new THREE.MeshBasicMaterial({map:t,color:RC,transparent:true,depthTest:false,depthWrite:false}));
   m.matrixAutoUpdate=false;m.matrix.makeBasis(X,Y,Z).setPosition((a[0]+b[0])/2,(a[1]+b[1])/2,(a[2]+b[2])/2);
   m.renderOrder=997;grp.add(m);routeObjs.push(m);routeTex.push(t);
@@ -1089,6 +1092,62 @@ function riser(w,f,x,z){
 function ring(w,f,x,z){
   var m=new THREE.Mesh(new THREE.RingGeometry(0.7,1.0,40).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:RC,transparent:true,opacity:0.95,depthTest:false,depthWrite:false,side:THREE.DoubleSide}));
   m.position.set(x,(f-1)*H+0.08,z);m.renderOrder=997;grpOf(w,f).add(m);routeObjs.push(m);routeRing=m;
+}
+
+/* ---------- Clear the view of the route: only while a route is shown, fade what hides it ---------- */
+var FADED=[],FCAND=null,FEX=-1,FCAM={p:new THREE.Vector3(),q:new THREE.Quaternion(),t:0},FSAMP=[];
+function fadeRestore(list){
+  (list||FADED).forEach(function(m){if(m.userData.om)m.material=m.userData.om;});
+  if(!list)FADED=[];
+}
+function fadeCands(){
+  var out=[],B=new THREE.Box3(),sz=new THREE.Vector3();
+  var roots=[HALL,LINK];['L','R'].forEach(function(w){for(var f=1;f<=4;f++)roots.push(FG[w][f]);});
+  roots.forEach(function(g){if(!vis(g))return;g.updateMatrixWorld(true);g.traverse(function(m){
+    if(!m.isMesh||!m.visible||m.userData.room||routeObjs.indexOf(m)>=0||m===outline)return;
+    var mt=m.userData.om||m.material;if(Array.isArray(mt)||mt.depthTest===false)return;
+    if(mt.transparent&&mt.opacity<0.5)return;           /* glass and tiles are already see-through */
+    if(!m.geometry.boundingBox)m.geometry.computeBoundingBox();
+    B.copy(m.geometry.boundingBox).applyMatrix4(m.matrixWorld);B.getSize(sz);
+    if(sz.y<0.5||Math.max(sz.x,sz.z)>25)return;          /* floors, ceilings and room colour tiles stay */
+    out.push({m:m,b:B.clone()});
+  });});
+  return out;
+}
+function fadeSamples(){
+  var out=[];if(!LASTROUTE)return out;
+  LASTROUTE.pts.forEach(function(pts,ei){
+    if(LASTROUTE.kinds[ei]==='lift')return;
+    for(var i=1;i<pts.length;i++){
+      var a=pts[i-1],b=pts[i],n=Math.max(1,Math.ceil(Math.hypot(b[0]-a[0],b[1]-a[1],b[2]-a[2])/2.5));
+      for(var k=0;k<=n;k++){var t=k/n;out.push(new THREE.Vector3(a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t+0.4,a[2]+(b[2]-a[2])*t));}
+    }
+  });
+  return out;
+}
+function fadeUpdate(rebuild){
+  if(st.walk||!routeObjs.length||!LASTROUTE){fadeRestore();FCAND=null;return;}
+  if(rebuild||!FCAND||FEX!==st.ex){FCAND=fadeCands();FEX=st.ex;if(rebuild)FSAMP=fadeSamples();}
+  var rm=st.sel,keep=function(b){
+    if(!rm)return false;var c=b.getCenter(new THREE.Vector3()),y0=(rm.floor-1)*H+(rm.floor-1)*st.ex;
+    return c.x>rm.x0&&c.x<rm.x1&&c.z>rm.z0&&c.z<rm.z1&&c.y>y0-0.1&&c.y<y0+H;   /* the destination stays solid */
+  };
+  var rr=new THREE.Ray(),dir=new THREE.Vector3(),hit=new THREE.Vector3(),want=new Set(),rc=new THREE.Raycaster();
+  FSAMP.forEach(function(P){
+    dir.subVectors(P,camera.position);var L=dir.length();if(L<0.5)return;dir.divideScalar(L);rr.set(camera.position,dir);
+    FCAND.forEach(function(c){
+      if(want.has(c.m)||!rr.intersectBox(c.b,hit)||hit.distanceTo(camera.position)>L-0.3)return;
+      rc.set(camera.position,dir);rc.far=L-0.3;
+      if(rc.intersectObject(c.m,false).length&&!keep(c.b))want.add(c.m);
+    });
+  });
+  FADED.forEach(function(m){if(!want.has(m)&&m.userData.om)m.material=m.userData.om;});
+  var nf=[];
+  want.forEach(function(m){
+    if(!m.userData.om){m.userData.om=m.material;var f=m.material.clone();f.transparent=true;f.opacity=0;f.depthWrite=false;m.userData.fm=f;}
+    m.material=m.userData.fm;nf.push(m);
+  });
+  FADED=nf;
 }
 function rlabel(w,f,text,x,y,z,wm){var sp=floatLabel(grpOf(w,f),text,'',x,y,z,wm);sp.material.depthTest=false;sp.renderOrder=998;routeObjs.push(sp);}
 
@@ -1268,6 +1327,7 @@ function showRoute(r){
   var rw=r.wing==='B'?'L':r.wing;
   if(r.id==='HALL')ring('L',5,0,0);else{var tn=NAVG[r.id+'in'];ring(rw,r.floor,tn.x,tn.z);}
   routeMsg('Route: '+LASTROUTE.text);
+  fadeUpdate(true);
 }
 
 /* Directory */
@@ -1500,6 +1560,11 @@ function loop(now){
   }
   if(st.walk)stepWalk(dt);else controls.update();
   if(routeTex.length){var o=-((now*0.0009)%1);routeTex.forEach(function(t){t.offset.x=o;});}
+  if(routeObjs.length){
+    if(st.walk){if(FADED.length)fadeUpdate(false);}
+    else if(now-FCAM.t>250){FCAM.t=now;
+      if(camera.position.distanceToSquared(FCAM.p)>0.04||Math.abs(camera.quaternion.dot(FCAM.q))<0.99995){FCAM.p.copy(camera.position);FCAM.q.copy(camera.quaternion);fadeUpdate(false);}}
+  }
   if(routeRing){var kr=1+0.18*Math.sin(now*0.005);routeRing.scale.set(kr,1,kr);}
   if(outline&&st.sel){st.sel.pick.getWorldPosition(v3);outline.position.copy(v3);outline.visible=vis(st.sel.pick);}
   extra.forEach(function(e){e.room.pick.getWorldPosition(v3);e.line.position.copy(v3);e.line.visible=vis(e.room.pick);});
@@ -1575,7 +1640,7 @@ function start(){
   }else{
     ['bReset','bFront','bBack','bTop','bXray','bLab','bRoute','bWalk','bEx','bFull','rEx','segB','segF'].forEach(function(i){var e=$(i);if(e&&e.tagName==='BUTTON')e.disabled=true;});
   }
-  window.__ucc={st:st,ROOMS:ROOMS,select:select,applyView:applyView,blocked:blocked,walk:walk,stairRect:stairRect,stairSpot:stairSpot,enterWalk:enterWalk,startClimb:startClimb,stepWalk:stepWalk,ZC1:ZC1,ZC2:ZC2,routeCount:function(){return routeObjs.length;},camera:function(){return camera;},controls:function(){return controls;},tryMove:tryMove,nav:function(id){var r=byId(id);showRoute(r);return LASTROUTE;},navBad:function(){if(!NAVG)NAVG=buildNav();return NAVBAD;},stairGeo:stairGeo,stairH:stairH,liftGeo:liftGeo,navNodes:function(){if(!NAVG)NAVG=buildNav();return NAVG;}};
+  window.__ucc={FG:FG,HALL:HALL,LINK:LINK,scene:function(){return scene;},st:st,ROOMS:ROOMS,select:select,applyView:applyView,blocked:blocked,walk:walk,stairRect:stairRect,stairSpot:stairSpot,enterWalk:enterWalk,startClimb:startClimb,stepWalk:stepWalk,ZC1:ZC1,ZC2:ZC2,routeCount:function(){return routeObjs.length;},camera:function(){return camera;},controls:function(){return controls;},tryMove:tryMove,nav:function(id){var r=byId(id);showRoute(r);return LASTROUTE;},navBad:function(){if(!NAVG)NAVG=buildNav();return NAVBAD;},stairGeo:stairGeo,stairH:stairH,liftGeo:liftGeo,faded:function(){return FADED.length;},fadeUpdate:fadeUpdate,navNodes:function(){if(!NAVG)NAVG=buildNav();return NAVG;}};
 }
 var fp=(document.fonts&&document.fonts.ready)?Promise.race([document.fonts.ready,new Promise(function(r){setTimeout(r,1500);})]):Promise.resolve();
 fp.then(start,start);
