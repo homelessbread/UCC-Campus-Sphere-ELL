@@ -10,11 +10,11 @@ Students, teachers, and administrators can explore the campus in 3D, view classr
 
 ### Front Page
 
-![UCC CampusSphere Front Page](<img width="1898" height="924" alt="Image" src="https://github.com/user-attachments/assets/b1de8e4c-75df-4327-9dbe-3d77aeac2eef" />)
+![UCC CampusSphere Front Page](https://github.com/user-attachments/assets/b1de8e4c-75df-4327-9dbe-3d77aeac2eef)
 
 ### 3D UCC Congress Campus Model
 
-![3D UCC Congress Campus Model](<img width="1920" height="1080" alt="Image" src="https://github.com/user-attachments/assets/f27f9e69-718d-40c0-b7a7-149931aaf220" />)
+![3D UCC Congress Campus Model](https://github.com/user-attachments/assets/f27f9e69-718d-40c0-b7a7-149931aaf220)
 
 ## Tech Stack
 
